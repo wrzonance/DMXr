@@ -1,5 +1,7 @@
 # DMXr for SignalRGB
 
+> Follows the global `~/.claude/rules` (code · workflow · security · agents). This file holds only DMXr-specific facts and overrides.
+
 DMXr bridges DMX lighting fixtures into SignalRGB as first-class canvas devices. Two-component architecture: a SignalRGB JS plugin and a Node.js server using Fastify + dmx-ts for ENTTEC DMX USB Pro output.
 
 ## Repo Structure
@@ -66,9 +68,9 @@ Browser (http://localhost:8080)       SignalRGB Plugin (DMXr.js)
 
 ```bash
 cd server
-npm test          # vitest (tests co-located: *.test.ts next to source)
-npx tsc --noEmit  # type check (strict mode)
-npm run build     # compile to dist/
+npm test          # vitest run (tests co-located: *.test.ts next to source)
+npx tsc --noEmit  # type check (strict mode) -- the clean-check; no separate ESLint
+npm run build     # tsc -> dist/
 ```
 
 ## Key Conventions
@@ -96,21 +98,15 @@ npm run build     # compile to dist/
 - `DMXr.qml` for settings panel UI
 - Uses `device.color(x,y)` to sample canvas (not `getColors("Inline")` which is broken)
 
+## Testing (DMXr-specific)
+
+- **Coverage is DIAGNOSTIC** -- vitest with no enforced minimum.
+- Favor tests at **module/API boundaries** over internals; mock only at process edges (stores/dispatcher injected as deps).
+- **Pin every bug-fix with a regression test referencing the commit SHA.**
+
 ## Note
 
 For deployment credentials, SSH access, and machine-specific details -- query local `.claude/` memory files (not committed to repo). These vary per developer machine.
-
-## Testing philosophy
-
-Every test must justify itself against four properties:
-1. Protects against real regressions (user-visible behavior)
-2. Resists refactoring (doesn't break on internal restructuring)
-3. Fast enough to actually run
-4. Readable and maintainable
-
-Coverage % is a diagnostic, not a target. Tests at module/API boundaries
-beat tests on internals. Mocks belong at process edges, not everywhere.
-Pin every bug-fix with a regression test referencing the commit SHA.
 
 ## Maintenance
 
