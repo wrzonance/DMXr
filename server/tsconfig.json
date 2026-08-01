@@ -15,5 +15,9 @@
     "isolatedModules": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  // node-pin.ts is a build-time gate, not server code. It is excluded from emit so
+  // its `semver` import stays a devDependency and never reaches the pruned release
+  // bundle that build-server.yml ships. It is still typechecked (tsconfig.scripts.json)
+  // and still unit-tested (vitest), so excluding it costs no coverage.
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "src/config/node-pin.ts"]
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseMajor, isBoundedRange, checkNodePin } from "./node-pin.js";
+import { parseMajor, isRangeConfinedToMajor, checkNodePin } from "./node-pin.js";
 import type { NodePinInputs } from "./node-pin.js";
 
 const consistentInputs: NodePinInputs = {
@@ -40,22 +40,43 @@ describe("parseMajor", () => {
   });
 });
 
-describe("isBoundedRange", () => {
-  it("accepts a range with an upper bound", () => {
-    expect(isBoundedRange(">=24 <25")).toBe(true);
+describe("isRangeConfinedToMajor", () => {
+  it("accepts an explicit single-major range", () => {
+    expect(isRangeConfinedToMajor(">=24 <25", 24)).toBe(true);
   });
 
-  it("accepts a caret range, which is implicitly bounded", () => {
-    expect(isBoundedRange("^24.13.3")).toBe(true);
+  it("accepts caret, tilde and exact pins inside the major", () => {
+    expect(isRangeConfinedToMajor("^24.13.3", 24)).toBe(true);
+    expect(isRangeConfinedToMajor("~24.13.0", 24)).toBe(true);
+    expect(isRangeConfinedToMajor("24.13.3", 24)).toBe(true);
   });
 
   it("rejects an open-ended floor", () => {
-    expect(isBoundedRange(">=24")).toBe(false);
-    expect(isBoundedRange(">=18.0.0")).toBe(false);
+    expect(isRangeConfinedToMajor(">=24", 24)).toBe(false);
+    expect(isRangeConfinedToMajor(">=18.0.0", 24)).toBe(false);
+  });
+
+  // The syntactic predicate this replaced returned true here: the range has an
+  // upper bound and starts with 24, yet Node 25 satisfies it.
+  it("rejects a bounded range that still spans two majors", () => {
+    expect(isRangeConfinedToMajor(">=24 <26", 24)).toBe(false);
+  });
+
+  it("rejects a disjunction that reaches past the major", () => {
+    expect(isRangeConfinedToMajor("^24 || ^25", 24)).toBe(false);
   });
 
   it("rejects a wildcard", () => {
-    expect(isBoundedRange("*")).toBe(false);
+    expect(isRangeConfinedToMajor("*", 24)).toBe(false);
+  });
+
+  it("rejects a range confined to a different major", () => {
+    expect(isRangeConfinedToMajor("^22.0.0", 24)).toBe(false);
+  });
+
+  it("returns false for a malformed range instead of throwing", () => {
+    expect(isRangeConfinedToMajor("not-a-range", 24)).toBe(false);
+    expect(isRangeConfinedToMajor("", 24)).toBe(false);
   });
 });
 
@@ -119,6 +140,42 @@ describe("checkNodePin", () => {
 
     expect(result.problems.join(" ")).toContain("25");
     expect(result.problems.join(" ")).toContain("24");
+  });
+
+  // Adversarial review of PR #127 (Codex gpt-5.6-sol) found the gate accepted
+  // ranges that pass a first-number/has-an-upper-bound check but still admit a
+  // different major -- the exact drift it exists to prevent.
+  it("fails an engines range that admits a second major", () => {
+    const result = checkNodePin({ ...consistentInputs, enginesNode: ">=24 <26" });
+
+    expect(result.consistent).toBe(false);
+    expect(result.problems.join(" ")).toContain("engines.node");
+  });
+
+  it("fails an unbounded @types/node range", () => {
+    const result = checkNodePin({ ...consistentInputs, typesNode: ">=24" });
+
+    expect(result.consistent).toBe(false);
+    expect(result.problems.join(" ")).toContain("@types/node");
+  });
+
+  it("fails a disjunctive @types/node range that reaches past the pin", () => {
+    const result = checkNodePin({ ...consistentInputs, typesNode: "^24 || ^25" });
+
+    expect(result.consistent).toBe(false);
+    expect(result.problems.join(" ")).toContain("@types/node");
+  });
+
+  it("still accepts an exact pinned @types/node version", () => {
+    const result = checkNodePin({ ...consistentInputs, typesNode: "24.13.3" });
+
+    expect(result.consistent).toBe(true);
+  });
+
+  it("still accepts a tilde @types/node range inside the pin", () => {
+    const result = checkNodePin({ ...consistentInputs, typesNode: "~24.13.0" });
+
+    expect(result.consistent).toBe(true);
   });
 
   it("does not mutate its input", () => {
