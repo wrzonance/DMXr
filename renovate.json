@@ -15,6 +15,28 @@
     {
       "matchManagers": ["npm"],
       "groupName": "npm-server"
+    },
+    {
+      "description": "Node pin (issue #126): only propose npm releases whose own engines.node overlaps ours. The constraint is auto-detected from engines.node and .nvmrc -- deliberately NOT declared in a `constraints` block, because Renovate treats a manually-set constraint as fixed and will never offer to bump it, forking the source of truth. Scoped to runtime dependencies per Renovate's guidance that strict filtering across devDependencies filters far more than most users expect.",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["dependencies"],
+      "constraintsFiltering": "strict"
+    },
+    {
+      "description": "Node pin (issue #126): never propose a Node MAJOR bump. Moving LTS majors touches .nvmrc, engines.node, @types/node, CI and the runtime bundled into the release artifact -- a coordinated decision, not a routine dependency PR. Minor/patch within the pinned major stays enabled so security patches still flow.",
+      "matchDepNames": ["node"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "Node pin (issue #126): keep .nvmrc and any workflow node-version on the pinned major. Bounded rather than disabled so 24.x patches still arrive.",
+      "matchDatasources": ["node-version"],
+      "allowedVersions": "<25.0.0"
+    },
+    {
+      "description": "Node pin (issue #126): @types/node must track the runtime major, never lead it. A typings-only bump past the runtime lets tsc accept APIs that do not exist at execution -- this repo was sitting at @types/node 25 against a Node 22 CI, and Node 25 is EOL and never was an LTS.",
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": "<25.0.0"
     }
   ]
 }

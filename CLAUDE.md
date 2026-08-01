@@ -8,13 +8,15 @@ DMXr bridges DMX lighting fixtures into SignalRGB as first-class canvas devices.
 
 ```
 DMXr/
+├── .nvmrc                       # Node major (24 LTS) -- single source of truth, read by CI + version managers
 ├── DMXr.js                      # SignalRGB plugin (UDP/HTTP color transport)
 ├── DMXr.qml                     # SignalRGB settings panel UI
 ├── docs/images/                 # SVG logos, fixture icons
 └── server/
+    ├── .npmrc                   # engine-strict=true -- a wrong Node major fails `npm ci`
     ├── src/                     # All server TypeScript
     │   ├── bootstrap/           # Startup orchestration (DMX, library, shutdown)
-    │   ├── config/              # Settings, remap-preset, server-config stores
+    │   ├── config/              # Settings, remap-preset, server-config stores, Node-pin check
     │   ├── dmx/                 # Universe manager, dispatcher, connection pool, monitor, driver factory
     │   ├── fixtures/            # Fixture/group/user-fixture stores, color pipeline, channel mapper
     │   ├── libraries/           # Library registry (OFL + user fixtures)
@@ -31,6 +33,7 @@ DMXr/
     │   ├── ui/                  # Frontend helpers (channel labels, CSS theming, OFL conversion)
     │   ├── ui-tests/            # Playwright E2E tests (grid, CRUD, settings, multi-select)
     │   └── utils/               # Formatting, validation helpers
+    ├── scripts/                 # Dev/ops entry points (service installers, check-node-pin)
     ├── public/                  # Alpine.js web UI (no build step)
     │   ├── js/                  # app.js + 31 mixin files
     │   └── css/                 # Feature-scoped CSS files
@@ -66,11 +69,20 @@ Browser (http://localhost:8080)       SignalRGB Plugin (DMXr.js)
 
 ## Development
 
+**Node 24 LTS is required and enforced** (issue #126). `.nvmrc` is the single source of
+truth; `server/.npmrc` sets `engine-strict=true`, so `npm ci` **fails** on any other major
+rather than warning. Use a version manager that reads `.nvmrc` (`fnm use` / `nvm use` /
+`mise install`). Never bump the Node major as a routine dependency PR -- it is one
+coordinated change across `.nvmrc`, `engines.node`, `@types/node`, CI, and the runtime that
+`build-server.yml` bundles into the release artifact.
+
 ```bash
 cd server
-npm test          # vitest run (tests co-located: *.test.ts next to source)
-npx tsc --noEmit  # type check (strict mode) -- the clean-check; no separate ESLint
-npm run build     # tsc -> dist/
+npm test                   # vitest run (tests co-located: *.test.ts next to source)
+npm run typecheck          # tsc --noEmit (strict mode) -- the clean-check; no separate ESLint
+npm run typecheck:scripts  # same strict flags over scripts/ (outside the build's rootDir)
+npm run check:node-pin     # assert every Node declaration names the same major
+npm run build              # tsc -> dist/
 ```
 
 ## Key Conventions

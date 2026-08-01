@@ -14,6 +14,14 @@
 - Auto-generates `serverId` (UUID) on first load if missing
 - Always returns defensive copies (`{ ...current }`) to prevent external mutation
 
+### node-pin.ts
+- `parseMajor(raw)`, `isBoundedRange(range)`, `checkNodePin(inputs)` -> `NodePinCheckResult`
+- Pure comparison logic for the Node 24 LTS pin (issue #126): asserts `.nvmrc`,
+  `engines.node`, `@types/node` and the running interpreter all name the same major,
+  and that `engines.node` is bounded rather than an open-ended floor
+- No I/O -- `server/scripts/check-node-pin.ts` supplies the files and the exit code.
+  Lives here so tsconfig typechecks it and vitest covers it; `scripts/` is outside both.
+
 ### remap-preset-store.ts
 - `createRemapPresetStore(filePath)` -> `RemapPresetStore { load, getAll, get, upsert, remove, save }`
 - Stores named channel-remap presets (channelCount + offset mapping)
