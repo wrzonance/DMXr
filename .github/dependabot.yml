@@ -1,0 +1,35 @@
+# Dependabot runs alongside Mend Renovate (renovate.json) on purpose.
+#
+# Every Renovate run in this org was suppressed by Mend's platform-level
+# `mode=silent`, which blocked all PRs and Dependency Dashboards. Dependabot is
+# enabled here so dependency updates stay visible, and so the two tools can be
+# compared side by side before we settle on one. Expect duplicate PRs until then
+# -- that is intentional, not a misconfiguration.
+version: 2
+
+updates:
+  - package-ecosystem: "npm"
+    directory: "/server"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 20
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      npm-server-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 20
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      github-actions-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
