@@ -5,6 +5,18 @@
 # enabled here so dependency updates stay visible, and so the two tools can be
 # compared side by side before we settle on one. Expect duplicate PRs until then
 # -- that is intentional, not a misconfiguration.
+#
+# Node pin (issue #126): Dependabot has NO equivalent of Renovate's
+# `constraintsFiltering`. Its ignore/allow/versioning-strategy/groups levers all
+# operate on semver update *type*, never on runtime compatibility, so it cannot be
+# told "only propose updates whose engines.node overlaps ours".
+#
+# Two mitigations, since it stays enabled for coverage:
+#   1. `@types/node` majors are ignored below, so it cannot re-propose the
+#      typings-ahead-of-runtime drift that issue #126 exists to fix.
+#   2. Everything else relies on CI: the `node-pin` job fails on declaration
+#      drift, and npm's `engine-strict` (server/.npmrc) fails the install itself
+#      on a wrong runtime. Treat any Dependabot npm PR as needing an engines glance.
 version: 2
 
 updates:
@@ -20,6 +32,10 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      # Node pin (issue #126): @types/node tracks the runtime major, never leads it.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"

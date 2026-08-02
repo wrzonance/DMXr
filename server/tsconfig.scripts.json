@@ -1,0 +1,16 @@
+// Typechecks `scripts/` under the same strict flags as `src/`.
+//
+// The base config sets `rootDir: "src"` and emits to `dist/`, so it cannot also
+// cover `scripts/` without changing the build output. This config is check-only:
+// it widens the root and turns emit off, so a broken script fails CI instead of
+// failing the first time someone runs it.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "declaration": false,
+    "sourceMap": false
+  },
+  "include": ["scripts/**/*.ts", "src/**/*.ts"]
+}
