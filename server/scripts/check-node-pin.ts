@@ -16,6 +16,7 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const SERVER_DIR = join(SCRIPT_DIR, "..");
 const REPO_ROOT = join(SERVER_DIR, "..");
 
+/** Reads a UTF-8 file, naming the path in the error so a bad checkout is obvious. */
 function read(path: string): string {
   try {
     return readFileSync(path, "utf8");
@@ -25,11 +26,13 @@ function read(path: string): string {
   }
 }
 
+/** The slice of `server/package.json` the pin cares about. */
 interface ServerManifest {
   readonly engines?: { readonly node?: string };
   readonly devDependencies?: Readonly<Record<string, string>>;
 }
 
+/** Parses a package manifest, distinguishing "unreadable" from "not valid JSON". */
 function readManifest(path: string): ServerManifest {
   try {
     return JSON.parse(read(path)) as ServerManifest;
@@ -39,6 +42,13 @@ function readManifest(path: string): ServerManifest {
   }
 }
 
+/**
+ * Gathers the four declarations from disk and the current process.
+ *
+ * A missing `engines.node` or `@types/node` throws rather than defaulting: the pin
+ * cannot be satisfied by a declaration that is not there, and silently passing would
+ * defeat the gate.
+ */
 function collectInputs(): NodePinInputs {
   const manifestPath = join(SERVER_DIR, "package.json");
   const manifest = readManifest(manifestPath);
@@ -63,6 +73,7 @@ function collectInputs(): NodePinInputs {
   };
 }
 
+/** Runs the check and prints either a one-line pass or a full declaration table. */
 function main(): void {
   const result = checkNodePin(collectInputs());
 

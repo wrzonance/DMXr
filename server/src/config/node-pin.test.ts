@@ -56,8 +56,9 @@ describe("isRangeConfinedToMajor", () => {
     expect(isRangeConfinedToMajor(">=18.0.0", 24)).toBe(false);
   });
 
-  // The syntactic predicate this replaced returned true here: the range has an
-  // upper bound and starts with 24, yet Node 25 satisfies it.
+  // Regression, fixed in 2fa65a6: the syntactic predicate this replaced returned
+  // true here, because the range has an upper bound and starts with 24 — yet Node
+  // 25 satisfies it.
   it("rejects a bounded range that still spans two majors", () => {
     expect(isRangeConfinedToMajor(">=24 <26", 24)).toBe(false);
   });
@@ -142,9 +143,10 @@ describe("checkNodePin", () => {
     expect(result.problems.join(" ")).toContain("24");
   });
 
-  // Adversarial review of PR #127 (Codex gpt-5.6-sol) found the gate accepted
-  // ranges that pass a first-number/has-an-upper-bound check but still admit a
-  // different major -- the exact drift it exists to prevent.
+  // Regression, fixed in 2fa65a6: adversarial review of PR #127 (Codex
+  // gpt-5.6-sol) found the gate accepted ranges that pass a first-number or
+  // has-an-upper-bound check but still admit a different major -- the exact
+  // drift it exists to prevent.
   it("fails an engines range that admits a second major", () => {
     const result = checkNodePin({ ...consistentInputs, enginesNode: ">=24 <26" });
 

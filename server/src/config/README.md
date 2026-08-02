@@ -15,10 +15,11 @@
 - Always returns defensive copies (`{ ...current }`) to prevent external mutation
 
 ### node-pin.ts
-- `parseMajor(raw)`, `isBoundedRange(range)`, `checkNodePin(inputs)` -> `NodePinCheckResult`
+- `parseMajor(raw)`, `isRangeConfinedToMajor(range, major)`, `checkNodePin(inputs)` -> `NodePinCheckResult`
 - Pure comparison logic for the Node 24 LTS pin (issue #126): asserts `.nvmrc`,
   `engines.node`, `@types/node` and the running interpreter all name the same major,
-  and that `engines.node` is bounded rather than an open-ended floor
+  and that `engines.node` and `@types/node` are each confined to that major
+  (`rangeProblems` checks both) rather than being open-ended or spanning two majors
 - No I/O -- `server/scripts/check-node-pin.ts` supplies the files and the exit code.
   Lives here so tsconfig typechecks it and vitest covers it; `scripts/` is outside both.
 

@@ -84,10 +84,15 @@ export function isRangeConfinedToMajor(range: string, major: number): boolean {
   }
 }
 
+/** Builds a declaration record, parsing its major for display in failure output. */
 function declare(source: string, raw: string): NodePinDeclaration {
   return { source, raw, major: parseMajor(raw) };
 }
 
+/**
+ * Reports a range declaration that is not wholly inside the pinned major.
+ * Returns an empty list when the range is fine, so callers can spread it.
+ */
 function rangeProblems(
   source: string,
   range: string,
@@ -102,6 +107,10 @@ function rangeProblems(
   ];
 }
 
+/**
+ * Reports the interpreter actually executing the check being off the pin, with the
+ * remedy — this is the failure a contributor on the wrong runtime will hit first.
+ */
 function runtimeProblems(version: string, pinned: number): readonly string[] {
   const major = parseMajor(version);
   if (major === pinned) return [];

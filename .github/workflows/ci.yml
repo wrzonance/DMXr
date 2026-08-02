@@ -4,6 +4,12 @@ on:
   pull_request:
     branches: [main]
 
+# Least privilege. Declared at workflow level rather than on one job: every job here
+# only checks out and runs npm, and ci.yml was the sole workflow without a permissions
+# block, so all four jobs were inheriting whatever the repo/org default grants.
+permissions:
+  contents: read
+
 jobs:
   typecheck:
     runs-on: ubuntu-latest
