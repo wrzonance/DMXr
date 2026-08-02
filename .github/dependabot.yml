@@ -1,22 +1,47 @@
-# Dependabot runs alongside Mend Renovate (renovate.json) on purpose.
+# Dependabot VERSION updates are OFF. Mend Renovate (renovate.json) owns them.
 #
-# Every Renovate run in this org was suppressed by Mend's platform-level
-# `mode=silent`, which blocked all PRs and Dependency Dashboards. Dependabot is
-# enabled here so dependency updates stay visible, and so the two tools can be
-# compared side by side before we settle on one. Expect duplicate PRs until then
-# -- that is intentional, not a misconfiguration.
+# This file is kept rather than deleted, because `open-pull-requests-limit: 0` is
+# the documented way to stop version updates while leaving the per-ecosystem
+# settings below available to Dependabot's SECURITY updates. To re-enable version
+# updates, set the limits back to 20 -- nothing else has to be reconstructed.
 #
-# Node pin (issue #126): Dependabot has NO equivalent of Renovate's
-# `constraintsFiltering`. Its ignore/allow/versioning-strategy/groups levers all
-# operate on semver update *type*, never on runtime compatibility, so it cannot be
-# told "only propose updates whose engines.node overlaps ours".
+# IMPORTANT: Dependabot SECURITY updates are a repository setting
+# (Settings -> Code security -> Dependabot security updates), NOT this file. They
+# must stay ON, and this change does not touch them. Dependabot is the better of
+# the two at alert-driven security PRs; it is what surfaced the advisories cleared
+# in cc5b257.
 #
-# Two mitigations, since it stays enabled for coverage:
-#   1. `@types/node` majors are ignored below, so it cannot re-propose the
-#      typings-ahead-of-runtime drift that issue #126 exists to fix.
-#   2. Everything else relies on CI: the `node-pin` job fails on declaration
-#      drift, and npm's `engine-strict` (server/.npmrc) fails the install itself
-#      on a wrong runtime. Treat any Dependabot npm PR as needing an engines glance.
+# ---------------------------------------------------------------------------
+# Why Renovate won the side-by-side (run 2026-08-01/02; see #125, #126)
+#
+# #125 enabled both tools deliberately and temporarily, to compare them on the same
+# manifests before settling on one. One cycle produced the answer.
+#
+# 1. Volume -- identical coverage, roughly half the review surface:
+#
+#      work                Renovate            Dependabot
+#      npm minor/patch     #128 (1 PR)         #131 (1 PR)
+#      npm majors          #130 (1 PR)         #132 #133 #135 #136 (4 PRs)
+#      actions minor       #123 (1 PR)         #137 (1 PR)
+#      actions majors      #129 (1 PR)         #138 #139 (2 PRs)
+#      TOTAL               4 PRs               8 PRs
+#
+# 2. Engine awareness -- the decisive one. Renovate reads `engines.node` and
+#    `.nvmrc` and filters candidates against them (`constraintsFiltering: "strict"`,
+#    renovate.json). Dependabot has no equivalent at any level: its
+#    ignore/allow/versioning-strategy/groups levers all operate on semver update
+#    *type*, never on runtime compatibility.
+#
+#    Not theoretical. Dependabot opened #134 proposing `@types/node` 26 against a
+#    Node 24 runtime -- the exact typings-ahead-of-runtime drift issue #126 exists
+#    to prevent -- while Renovate, given the same repository state, did not.
+#    Constraining Dependabot needed hand-written per-package ignore rules that must
+#    then be maintained for every future dependency carrying an engines constraint.
+#    That does not scale, and forgetting one fails silently.
+#
+# A pin is only as strong as the automation that respects it, so version updates
+# belong to the tool that can actually see it.
+# ---------------------------------------------------------------------------
 version: 2
 
 updates:
@@ -24,28 +49,16 @@ updates:
     directory: "/server"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 20
+    # 0 = version updates disabled. Renovate owns npm bumps and is engine-aware.
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "chore(deps)"
-    groups:
-      npm-server-minor-patch:
-        update-types:
-          - "minor"
-          - "patch"
-    ignore:
-      # Node pin (issue #126): @types/node tracks the runtime major, never leads it.
-      - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 20
+    # 0 = version updates disabled. Renovate owns action bumps.
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "chore(ci)"
-    groups:
-      github-actions-minor-patch:
-        update-types:
-          - "minor"
-          - "patch"
