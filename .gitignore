@@ -16,3 +16,8 @@ trace-whiteout.ts
 test-results/
 playwright-report/
 .claude/
+
+# agentkit: .agent/ is working state; these two files are the declaration
+.agent/*
+!.agent/config.env
+!.agent/board.json

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "owner": "wrzonance",
+  "project": {
+    "number": 9,
+    "id": "PVT_kwDOEMq2wc4Bf8Yz",
+    "title": "DMXr"
+  },
+  "statusField": {
+    "id": "PVTSSF_lADOEMq2wc4Bf8YzzhaLmlA",
+    "name": "Status",
+    "options": {
+      "Backlog": "7209cd5b",
+      "Ready": "a93221ef",
+      "In progress": "afd8a8a3",
+      "In review": "d5d79b0c",
+      "Done": "a7ab500e"
+    }
+  },
+  "generatedAt": "2026-08-10T14:25:32Z",
+  "fingerprint": "sha256:d33f49759110f98f4926ceb256419a241bd6a78047bfaf2d6e0684d071ccd357"
+}
