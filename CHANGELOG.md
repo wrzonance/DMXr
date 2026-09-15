@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.3] - 2026-09-15
+
+Maintenance release: every open security advisory cleared, the bundled runtime
+moved to Node 24 LTS, and the release pipeline fixed so build assets attach
+again. No user-facing feature changes.
+
+### Security
+- `fastify` 5.8.5 → 5.12.3 ([GHSA-w2qp-rph6-63g4](https://github.com/advisories/GHSA-w2qp-rph6-63g4) schema-validation bypass, [GHSA-3m5p-2c4r-xxw2](https://github.com/advisories/GHSA-3m5p-2c4r-xxw2) `X-Forwarded-*` spoofing under `trustProxy`)
+- `@fastify/rate-limit` 10.3.0 → 11.2.0 ([GHSA-grpc-p53c-r64v](https://github.com/advisories/GHSA-grpc-p53c-r64v) — high, rate-limit bypass via IPv6 address rotation)
+- `@fastify/static` 9 → 10 ([GHSA-8pvw-jcv7-9cmj](https://github.com/advisories/GHSA-8pvw-jcv7-9cmj) authorization bypass via non-canonical paths, [GHSA-83w8-p2f5-377r](https://github.com/advisories/GHSA-83w8-p2f5-377r) route-guard bypass via path traversal) — this plugin serves the web UI
+- `fast-uri` transitive bumps ([GHSA-5jgf-p345-68v8](https://github.com/advisories/GHSA-5jgf-p345-68v8), [GHSA-f65p-4m7j-42xc](https://github.com/advisories/GHSA-f65p-4m7j-42xc), [GHSA-fph4-wmhf-6fwf](https://github.com/advisories/GHSA-fph4-wmhf-6fwf), [GHSA-jqff-g426-hqxp](https://github.com/advisories/GHSA-jqff-g426-hqxp) — host confusion / SSRF)
+- Fixture flash `durationMs` explicitly clamped (CodeQL CWE-400, defense-in-depth alongside schema validation)
+- Dev-only transitives cleared: `js-yaml`, `nanoid`, `postcss`, `brace-expansion`, `find-my-way`, `@vitest/mocker`, `extract-zip` (via puppeteer 25)
+- GitHub Actions hardened per `zizmor`: `persist-credentials: false` on every checkout, npm cache disabled in the release-publishing job; all actions pinned to full commit SHAs
+
+### Changed
+- **Node 24 LTS is now required and bundled** (was Node 22). `.nvmrc` is the single source of truth, `engine-strict` makes `npm ci` fail on any other major, and CI asserts every Node declaration agrees
+- `typescript` 6.0.3 → 7.0.2 (native compiler), `better-sqlite3` 12.9.0 → 13.0.3 (N-API build, SQLite 3.53.4)
+- `vitest` / `@vitest/coverage-v8` 4.1.5 → 5.0.0, `puppeteer` 24 → 25, `@playwright/test` → 1.63.0 (dev)
+- `@fastify/helmet`, `zod`, `tsx`, `@types/semver` minor/patch updates
+- Version updates are owned by Renovate (7-day minimum release age); Dependabot handles security alerts only
+- CodeQL code scanning and dependency-review workflows added; CI token scoped to least privilege
+
+### Fixed
+- Release build: Node.js checksum verification used the wrong filename, which is why the v1.3.2 release shipped without build assets
+- CI Node-version check compares ranges semantically instead of by shape
+
+### Tests
+- Property-based tests (`fast-check`) for motor-guard, CIDR and pipeline stages; redundant and tautological tests removed; UI tests run single-worker
+
+## [1.3.2] - 2026-05-01
+
+Note: the GitHub release for this version has no build assets — the release
+build failed on Node.js checksum verification (fixed in 1.3.3).
+
+### Security
+- Phase 1 of the 2026-04-08 security audit: auth middleware inverted to fail-closed so every route is protected when `API_KEY` is set, plus the other CRITICAL findings (#86)
+- `basic-ftp` DoS, `fastify` content-type bypass ([GHSA-247c-9743-5963](https://github.com/advisories/GHSA-247c-9743-5963)) and `postcss` XSS resolved via `npm audit fix`
+
+### Changed
+- `fastify` 5.8.4 → 5.8.5, `@fastify/static` 9.1.0 → 9.1.3, `better-sqlite3` 12.8.0 → 12.9.0
+- `vitest` / `@vitest/coverage-v8` 4.1.3 → 4.1.5, `puppeteer` 24.40 → 24.42, `typescript` 6.0.2 → 6.0.3, `pixelmatch` 7.1 → 7.2, `@types/node` 25.5.2 → 25.6.0 (dev)
+- `actions/setup-node` 6.3 → 6.4, `softprops/action-gh-release` 2.6 → 3.0
+- `server/config/` is gitignored in full
+
 ## [1.3.1] - 2026-04-08
 
 ### Security
@@ -155,7 +200,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Linux systemd installer and launcher scripts
 - Alpine.js web manager UI
 
-[Unreleased]: https://github.com/thewrz/DMXr/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/wrzonance/DMXr/compare/v1.3.3...HEAD
+[1.3.3]: https://github.com/wrzonance/DMXr/compare/v1.3.2...v1.3.3
+[1.3.2]: https://github.com/wrzonance/DMXr/compare/v1.3.1...v1.3.2
+[1.3.1]: https://github.com/wrzonance/DMXr/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/thewrz/DMXr/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/thewrz/DMXr/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/thewrz/DMXr/compare/v1.0.1...v1.1.0
