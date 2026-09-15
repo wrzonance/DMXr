@@ -38,6 +38,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # The runtime resolved here is the one bundled into the release artifact
       # below, so .nvmrc pins what ships to users, not just what CI builds with.
@@ -45,6 +47,9 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
+          # Release artifacts are built here; never restore an npm cache into a
+          # publishing job (zizmor cache-poisoning, issue #156).
+          package-manager-cache: false
 
       - name: Install dependencies
         working-directory: server
